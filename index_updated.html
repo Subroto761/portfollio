@@ -1,0 +1,672 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Subroto Mondal's Portfolio</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet"/>
+<meta content="Portfolio of Subroto Mondal, a Cloud &amp; DevOps Enthusiast specializing in AWS, GCP, Azure, Terraform, Docker, Kubernetes, and CI/CD pipelines with cloud animations." name="description"/>
+<meta content="Subroto Mondal, Cloud Computing, DevOps, AWS, GCP, Azure, Terraform, Docker, Kubernetes, Jenkins, Python, Java, Web Development, React, Cloud Animation" name="keywords"/>
+<style>
+        .project-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .project-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(153, 27, 27, 0.3);
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        .active {
+            color: #991b1b !important;
+            border-bottom: 2px solid #991b1b;
+        }
+        .bg-white .bg-gray-900 {
+            background-color: #f3f4f6;
+        }
+        .bg-white .bg-black {
+            background-color: #ffffff;
+        }
+        .bg-white .text-gray-300 {
+            color: #374151;
+        }
+        .bg-white .text-white {
+            color: #1f2937;
+        }
+        .bg-white .bg-gray-800 {
+            background-color: #e5e7eb;
+        }
+        /* Cloud Container Styles */
+        .cloud-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+        .cloud {
+            position: absolute;
+            filter: blur(5px);
+        }
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body class="bg-black text-white" id="theme-root">
+<div id="root"></div>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+<script type="text/babel">
+        const Nav = () => {
+            const [activeSection, setActiveSection] = React.useState('about');
+            const [isDark, setIsDark] = React.useState(true);
+
+            React.useEffect(() => {
+                const handleScroll = () => {
+                    const sections = ['about', 'experience', 'skills', 'projects', 'certifications', 'education', 'achievements', 'contact'];
+                    let current = 'about';
+                    for (const section of sections) {
+                        const element = document.getElementById(section);
+                        if (element && window.scrollY >= element.offsetTop - 100) {
+                            current = section;
+                        }
+                    }
+                    setActiveSection(current);
+                };
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            const toggleTheme = () => {
+                const body = document.getElementById("theme-root");
+                body.classList.toggle("bg-white");
+                body.classList.toggle("text-black");
+                body.classList.toggle("bg-black");
+                body.classList.toggle("text-white");
+                setIsDark(!isDark);
+            };
+
+            return (
+                <nav className="bg-gray-900 shadow-md fixed w-full z-10 animate__animated animate__fadeInDown">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between h-16">
+                            <div className="flex items-center">
+                                <span className="text-2xl font-bold text-red-800">Subroto Mondal</span>
+                            </div>
+                            <div className="flex items-center space-x-4">
+                                {['About', 'Experience', 'Skills', 'Projects', 'Certifications', 'Education', 'Achievements', 'Contact'].map((item) => (
+                                    <a
+                                        key={item}
+                                        href={`#${item.toLowerCase()}`}
+                                        className={`text-gray-300 hover:text-red-800 px-3 py-2 transition-colors duration-300 ${activeSection === item.toLowerCase() ? 'active' : ''}`}
+                                    >
+                                        {item}
+                                    </a>
+                                ))}
+                                <button
+                                    onClick={toggleTheme}
+                                    className="bg-gray-800 text-white px-3 py-1 rounded-lg hover:bg-gray-700 transition-colors duration-300"
+                                >
+                                    {isDark ? 'Light Mode' : 'Dark Mode'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            );
+        };
+
+        const Hero = () => {
+            const cloudContainerRef = React.useRef(null);
+
+            const handleImageError = (e) => {
+                e.target.src = "https://via.placeholder.com/200x100?text=Cloud";
+            };
+
+            React.useEffect(() => {
+                const container = cloudContainerRef.current;
+                if (!container) return;
+
+                const clouds = [];
+                const cloudImages = [
+                    './assest/cloud1.png',
+                    './assest/cloud2.png',
+                    './assest/cloud3.png'
+                ];
+
+                // Create clouds
+                const createCloud = (index) => {
+                    try {
+                        const img = document.createElement('img');
+                        img.src = cloudImages[index % cloudImages.length];
+                        img.className = 'cloud';
+                        img.style.position = 'absolute';
+                        img.style.zIndex = '0';
+                        img.style.opacity = Math.random() * 0.4 + 0.3; // 0.3 to 0.7
+                        img.style.width = `${Math.random() * 100 + 100}px`; // 100-200px
+                        img.style.top = `${Math.random() * 60 + 10}%`; // 10-70%
+                        img.style.left = `${Math.random() * -200}px`; // Start off-screen
+                        img.onerror = () => { img.src = 'https://via.placeholder.com/200x100?text=Cloud'; };
+                        container.appendChild(img);
+
+                        return {
+                            element: img,
+                            speed: Math.random() * 0.5 + 0.5 // 0.5-1px per frame
+                        };
+                    } catch (error) {
+                        console.error('Error creating cloud:', error);
+                        return null;
+                    }
+                };
+
+                // Initialize clouds
+                for (let i = 0; i < 5; i++) {
+                    const cloud = createCloud(i);
+                    if (cloud) clouds.push(cloud);
+                }
+
+                // Animation loop
+                let lastTime = null;
+                const animate = (time) => {
+                    if (!lastTime) lastTime = time;
+                    const delta = (time - lastTime) / 16.67; // Normalize to 60fps
+                    lastTime = time;
+
+                    clouds.forEach(cloud => {
+                        try {
+                            let left = parseFloat(cloud.element.style.left) || 0;
+                            left += cloud.speed * delta;
+                            if (left > window.innerWidth) {
+                                left = -parseFloat(cloud.element.style.width);
+                                cloud.element.style.top = `${Math.random() * 60 + 10}%`;
+                                cloud.element.style.opacity = Math.random() * 0.4 + 0.3;
+                            }
+                            cloud.element.style.left = `${left}px`;
+                        } catch (error) {
+                            console.error('Error animating cloud:', error);
+                        }
+                    });
+
+                    requestAnimationFrame(animate);
+                };
+
+                requestAnimationFrame(animate);
+
+                // Cleanup
+                return () => {
+                    clouds.forEach(cloud => {
+                        if (cloud.element && cloud.element.parentNode) {
+                            cloud.element.parentNode.removeChild(cloud.element);
+                        }
+                    });
+                };
+            }, []);
+
+            return (
+                <section className="min-h-screen relative flex items-center justify-center bg-gradient-to-r from-red-900 to-black text-white pt-16 animate__animated animate__fadeIn">
+                    <div className="cloud-container" ref={cloudContainerRef}></div>
+                    <div className="hero-content text-center max-w-3xl mx-auto px-4">
+                        <h1 className="text-4xl md:text-6xl font-bold mb-4 animate__animated animate__zoomIn">Hi, I am Subroto Mondal</h1>
+                        <p className="text-lg md:text-xl mb-6 animate__animated animate__fadeInUp animate__delay-1s">Cloud & DevOps Enthusiast | B.Tech CSE Student</p>
+                        <a href="#projects" className="inline-block bg-red-800 text-white font-semibold px-6 py-3 rounded-lg hover:bg-red-700 transition-colors duration-300 animate__animated animate__bounceIn animate__delay-2s">View My Work</a>
+                    </div>
+                </section>
+            );
+        };
+
+        const About = () => {
+            const handleImageError = (e) => {
+                e.target.src = "https://via.placeholder.com/300?text=Profile";
+            };
+
+            return (
+                <section id="about" className="py-20 bg-gray-900 animate__animated animate__fadeInUp">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <h2 className="text-3xl font-bold text-red-800 mb-8 text-center">About Me</h2>
+                        <div className="flex flex-col md:flex-row items-center">
+                            <img
+                                src="./assest/[YOUR_PROFILE_IMAGE]"
+                                alt="Subroto Mondal's profile picture"
+                                className="w-48 h-48 rounded-full mb-6 md:mb-0 md:mr-8 animate__animated animate__slideInLeft"
+                                onError={handleImageError}
+                            />
+                            <div>
+                                <p className="text-gray-300 text-lg mb-4">
+                                    I am a B.Tech Computer Science & Engineering student at Lovely Professional University, passionate about Cloud Computing and DevOps. I specialize in building scalable cloud infrastructures using AWS, GCP, Azure, Terraform, Docker, and Kubernetes, with a focus on automation and CI/CD pipelines using Jenkins and GitHub Actions. My projects demonstrate expertise in deploying secure, production-ready solutions. As a Student Placement Coordinator and member of the Department of Student Organization, I have honed leadership, communication, and organizational skills.
+                                </p>
+                                <h3 className="text-xl font-semibold text-red-800 mb-2">Learning Journey</h3>
+                                <ul className="text-gray-300 text-lg list-disc list-inside">
+                                    <li>📘 Started with Java, Python, Bash (2022)</li>
+                                    <li>☁️ Mastered cloud technologies – AWS, GCP, Azure (2023)</li>
+                                    <li>🔧 Embraced DevOps – Docker, Kubernetes, Terraform, CI/CD (2023-2024)</li>
+                                    <li>🧠 Now exploring advanced cloud architectures and IoT (2024-2025)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const Experience = () => (
+            <section id="experience" className="py-20 bg-black animate__animated animate__fadeInUp">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <h2 className="text-3xl font-bold text-red-800 mb-8 text-center">Experience</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="bg-gray-900 rounded-lg shadow-md p-6 animate__animated animate__slideInLeft">
+                            <h3 className="text-xl font-semibold text-red-800 mb-2">Student Placement Coordinator</h3>
+                            <p className="text-gray-300 mb-2">Lovely Professional University | Dec 2023 - Present</p>
+                            <ul className="text-gray-300 text-sm list-disc list-inside">
+                                <li>Liaised between students and recruiters to streamline placement processes</li>
+                                <li>Organized placement drives and interview preparation sessions</li>
+                                <li>Coordinated communication between students and companies</li>
+                            </ul>
+                        </div>
+                        <div className="bg-gray-900 rounded-lg shadow-md p-6 animate__animated animate__slideInRight">
+                            <h3 className="text-xl font-semibold text-red-800 mb-2">Department of Student Organization</h3>
+                            <p className="text-gray-300 mb-2">Lovely Professional University | 2024 - Present</p>
+                            <ul className="text-gray-300 text-sm list-disc list-inside">
+                                <li>Contributed to organizing student events and initiatives</li>
+                                <li>Collaborated with teams to enhance student engagement</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        );
+
+        const Skills = () => (
+            <section id="skills" className="py-20 bg-gray-900 animate__animated animate__fadeInUp">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <h2 className="text-3xl font-bold text-red-800 mb-8 text-center">Skills</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {[
+                            { title: "Languages", skills: ["Python", "Java (Advanced)", "Bash", "YAML"] },
+                            { title: "Cloud Technologies", skills: ["AWS", "GCP", "Azure"] },
+                            { title: "Infrastructure as Code", skills: ["Terraform", "AWS CloudFormation"] },
+                            { title: "Containerization & Orchestration", skills: ["Docker", "Kubernetes", "OpenShift"] },
+                            { title: "DevOps & CI/CD", skills: ["Jenkins", "GitHub Actions", "GitLab CI/CD"] },
+                            { title: "Web Development", skills: ["HTML", "CSS", "React", "JavaScript"] }
+                        ].map((category, index) => (
+                            <div key={category.title} className={`animate__animated animate__fadeIn animate__delay-${index + 1}s`}>
+                                <h3 className="text-xl font-semibold text-red-800 mb-4">{category.title}</h3>
+                                <ul className="text-gray-300 space-y-2">
+                                    {category.skills.map(skill => <li key={skill}>{skill}</li>)}
+                                </ul>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        );
+
+        const Projects = () => {
+            const [filter, setFilter] = React.useState('All');
+            const handleImageError = (e) => {
+                e.target.src = "https://via.placeholder.com/400x200?text=Project";
+            };
+
+            const projects = [
+                {
+                    title: "CloudOps Automator",
+                    description: "Developed an automated cloud infrastructure deployment tool using Terraform and Ansible, with CI/CD pipelines for seamless code deployment.",
+                    features: ["Implemented CI/CD with Jenkins & GitHub Actions", "Enhanced security with IAM roles, VPC, and security groups", "Automated infrastructure provisioning"],
+                    tech: ["Terraform", "Ansible", "AWS"],
+                    github: "#",
+                    period: "Aug 2024 - Present",
+                    image: "./assest/Automated Cloud Infrastructure Deployment.png"
+                },
+                {
+                    title: "AWS Hands-on Project",
+                    description: "Designed and deployed cloud-based infrastructure using AWS services, with scalable storage and automated backups.",
+                    features: ["Utilized AWS EC2, S3, and RDS", "Implemented automated backup solutions", "Optimized for scalability and cost-efficiency"],
+                    tech: ["AWS"],
+                    github: "#",
+                    period: "Jan 2024 - Aug 2024",
+                    image: "./assest/AWS Hands on Project.png"
+                },
+                {
+                    title: "DevOps Pipeline Implementation",
+                    description: "Built a CI/CD pipeline using Jenkins, GitHub Actions, Docker, and Kubernetes, with monitoring via ELK Stack and AWS CloudWatch.",
+                    features: ["Automated deployment on AWS with Terraform", "Containerized apps with Docker", "Real-time monitoring and logging"],
+                    tech: ["Jenkins", "Docker", "Kubernetes", "AWS"],
+                    github: "#",
+                    period: "Jul 2023",
+                    image: "./assest/Cloud-Based Infrastructure Using AWS Services.png"
+                },
+                {
+                    title: "Cloud-based Portfolio Website",
+                    description: "Designed a personal portfolio website hosted on AWS using S3, CloudFront, Lambda, and DynamoDB for dynamic functionality.",
+                    features: ["Hosted on AWS S3 with CloudFront CDN", "Integrated Lambda for contact form", "Used DynamoDB for data storage"],
+                    tech: ["AWS", "React"],
+                    github: "#",
+                    period: "Dec 2022",
+                    image: "./assest/portfolio.png"
+                }
+            ];
+
+            const filteredProjects = filter === 'All' ? projects : projects.filter(project => project.tech.includes(filter));
+
+            return (
+                <section id="projects" className="py-20 bg-black animate__animated animate__fadeInUp">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <h2 className="text-3xl font-bold text-red-800 mb-8 text-center">My Projects</h2>
+                        <div className="flex justify-center space-x-4 mb-8">
+                            {['All', 'AWS', 'React', 'Docker', 'Terraform'].map(tech => (
+                                <button
+                                    key={tech}
+                                    onClick={() => setFilter(tech)}
+                                    className={`px-4 py-2 rounded-lg ${filter === tech ? 'bg-red-800 text-white' : 'bg-gray-800 text-gray-300'} hover:bg-red-700 transition-colors duration-300`}
+                                >
+                                    {tech}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {filteredProjects.map((project, index) => (
+                                <div key={project.title} className={`bg-gray-900 rounded-lg shadow-md overflow-hidden project-card animate__animated animate__fadeInUp animate__delay-${index}s`}>
+                                    <img
+                                        src={project.image}
+                                        alt={`${project.title} screenshot`}
+                                        className="w-full h-48 object-cover"
+                                        onError={handleImageError}
+                                    />
+                                    <div className="p-6">
+                                        <h3 className="text-xl font-semibold text-red-800 mb-2">{project.title}</h3>
+                                        <p className="text-gray-300 mb-2">{project.period}</p>
+                                        <p className="text-gray-300 mb-4">{project.description}</p>
+                                        <ul className="text-gray-300 text-sm mb-4 list-disc list-inside">
+                                            {project.features.map(feature => <li key={feature}>{feature}</li>)}
+                                        </ul>
+                                        <div className="flex space-x-4">
+                                            <a href={project.github} className="text-red-800 hover:text-red-700 transition-colors duration-300">GitHub</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const Certifications = () => (
+            <section id="certifications" className="py-20 bg-gray-900 animate__animated animate__fadeInUp">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <h2 className="text-3xl font-bold text-red-800 mb-8 text-center">Certifications</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {[
+                            {
+                                title: "AWS Academy Cloud Foundations",
+                                issuer: "AWS Academy",
+                                date: "Nov 2024",
+                                credential: "Credential ID: [add if available]",
+                                badge: "https://www.credly.com/badges/your-aws-foundations-link"
+                            },
+                            {
+                                title: "AWS Academy Cloud Architecting",
+                                issuer: "AWS Academy",
+                                date: "Dec 2024",
+                                credential: "Credential ID: [add if available]",
+                                badge: "https://www.credly.com/badges/your-aws-architecting-link"
+                            },
+                            {
+                                title: "Introduction to IoT",
+                                issuer: "Cisco / NPTEL",
+                                date: "Nov 2024",
+                                credential: "Credential ID: [add if available]",
+                                badge: "https://www.credly.com/badges/your-iot-link"
+                            },
+                            {
+                                title: "Azure Administrator Associate",
+                                issuer: "Microsoft",
+                                date: "Apr 2024",
+                                credential: "Credential ID: [add if available]",
+                                badge: "https://www.credly.com/badges/your-azure-link"
+                            }
+                        ].map((cert, index) => (
+                            <div key={cert.title} className={`bg-black rounded-lg shadow-md p-6 animate__animated animate__${index % 2 === 0 ? 'fadeInLeft' : 'fadeInRight'}`}>
+                                <h3 className="text-xl font-semibold text-red-800 mb-2">{cert.title}</h3>
+                                <p className="text-gray-300 mb-2">Issued by {cert.issuer} | {cert.date}</p>
+                                <p className="text-gray-300 mb-4">Credential ID: {cert.credential}</p>
+                                <a href={cert.badge} target="_blank" rel="noopener noreferrer" className="text-red-800 hover:text-red-700 transition-colors duration-300">View Badge</a>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        );
+
+        const Education = () => (
+            <section id="education" className="py-20 bg-black animate__animated animate__fadeInUp">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <h2 className="text-3xl font-bold text-red-800 mb-8 text-center">Education</h2>
+                    <div className="space-y-8">
+                        <div className="bg-gray-900 rounded-lg shadow-md p-6 animate__animated animate__fadeInLeft">
+                            <h3 className="text-xl font-semibold text-red-800 mb-2">B.Tech in Computer Science & Engineering</h3>
+                            <p className="text-gray-300 mb-2">Lovely Professional University, Phagwara, Punjab | 2024 - Present</p>
+                            <p className="text-gray-300">CGPA: 7.28</p>
+                        </div>
+                        <div className="bg-gray-900 rounded-lg shadow-md p-6 animate__animated animate__fadeInRight">
+                            <h3 className="text-xl font-semibold text-red-800 mb-2">Intermediate</h3>
+                            <p className="text-gray-300 mb-2">Doon Public School, Dhanbad, Jharkhand | Apr 2020 - Mar 2022</p>
+                            <p className="text-gray-300">Percentage: 76.4%</p>
+                        </div>
+                        <div className="bg-gray-900 rounded-lg shadow-md p-6 animate__animated animate__fadeInLeft">
+                            <h3 className="text-xl font-semibold text-red-800 mb-2">Matriculation</h3>
+                            <p className="text-gray-300 mb-2">De Nobili School, Maithon, Jharkhand | Apr 2018 - Mar 2020</p>
+                            <p className="text-gray-300">Percentage: 80.3%</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        );
+
+        const Achievements = () => (
+            <section id="achievements" className="py-20 bg-gray-900 animate__animated animate__fadeInUp">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <h2 className="text-3xl font-bold text-red-800 mb-8 text-center">Achievements</h2>
+                    <div className="space-y-8">
+                        <div className="bg-gray-900 rounded-lg shadow-md p-6 animate__animated animate__fadeInLeft">
+                            <h3 className="text-xl font-semibold text-red-800 mb-2">Gold badge in Java on HackerRank</h3>
+                            <p className="text-gray-300 mb-2">Achieved Gold badge in Java on HackerRank through consistent problem-solving and coding proficiency.</p>
+                        </div>
+                        <div className="bg-gray-900 rounded-lg shadow-md p-6 animate__animated animate__fadeInRight">
+                            <h3 className="text-xl font-semibold text-red-800 mb-2">200+ Coding Problems Solved</h3>
+                            <p className="text-gray-300 mb-2">Solved over 200 coding problems across platforms like LeetCode and GeeksforGeeks, enhancing algorithmic and problem-solving skills.</p>
+                        </div>
+                        <div className="bg-gray-900 rounded-lg shadow-md p-6 animate__animated animate__fadeInLeft">
+                            <h3 className="text-xl font-semibold text-red-800 mb-2">Student Placement Coordinator</h3>
+                            <p className="text-gray-300 mb-2">Serving as Student Placement Coordinator at Lovely Professional University, streamlining placement processes and supporting student career development.</p>
+                        </div>
+                        <div className="bg-gray-900 rounded-lg shadow-md p-6 animate__animated animate__fadeInRight">
+                            <h3 className="text-xl font-semibold text-red-800 mb-2">Department of Student Organization</h3>
+                            <p className="text-gray-300 mb-2">Contributed to the Department of Student Organization, enhancing student engagement through event organization and team collaboration.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        );
+
+        const Contact = () => {
+            const [formData, setFormData] = React.useState({ name: '', email: '', message: '' });
+            const [status, setStatus] = React.useState('');
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                try {
+                    const response = await fetch('https://formspree.io/f/your_form_id', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                    if (response.ok) {
+                        setStatus('Message sent successfully!');
+                        setFormData({ name: '', email: '', message: '' });
+                    } else {
+                        setStatus('Error sending message. Please try again.');
+                    }
+                } catch (error) {
+                    setStatus('Error sending message. Please try again.');
+                }
+            };
+
+            const handleChange = (e) => {
+                setFormData({ ...formData, [e.target.name]: e.target.value });
+            };
+
+            return (
+                <section id="contact" className="py-20 bg-black animate__animated animate__fadeInUp">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <h2 className="text-3xl font-bold text-red-800 mb-8 text-center">Get in Touch</h2>
+                        <div className="max-w-lg mx-auto">
+                            <p className="text-gray-300 text-lg mb-6 text-center animate__animated animate__fadeIn">Let's build something awesome together! Feel free to reach out for collaborations, tech discussions, or just a friendly chat.</p>
+                            <form onSubmit={handleSubmit} className="space-y-4 mb-6">
+                                <div>
+                                    <label htmlFor="name" className="block text-gray-300">Name</label>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        value={formData.name}
+                                        onChange={handleChange}
+                                        required
+                                        className="w-full px-4 py-2 bg-gray-800 text-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-800"
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor="email" className="block text-gray-300">Email</label>
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        value={formData.email}
+                                        onChange={handleChange}
+                                        required
+                                        className="w-full px-4 py-2 bg-gray-800 text-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-800"
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor="message" className="block text-gray-300">Message</label>
+                                    <textarea
+                                        name="message"
+                                        value={formData.message}
+                                        onChange={handleChange}
+                                        required
+                                        rows="4"
+                                        className="w-full px-4 py-2 bg-gray-800 text-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-800"
+                                    ></textarea>
+                                </div>
+                                <button type="submit" className="w-full bg-red-800 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors duration-300">Send Message</button>
+                            </form>
+                            {status && <p className="text-center text-gray-300">{status}</p>}
+                            <div className="space-y-4">
+                                <p className="text-gray-300">Email: <a href="mailto:subrotomondal761@gmail.com" className="text-red-800 hover:text-red-700 transition-colors duration-300">subrotomondal761@gmail.com</a></p>
+                                <p className="text-gray-300">Mobile: <a href="tel:+918092580854" className="text-red-800 hover:text-red-700 transition-colors duration-300">+91-8092580854</a></p>
+                                <p className="text-gray-300">LinkedIn: <a href="https://www.linkedin.com/in/cnctsubroto" className="text-red-800 hover:text-red-700 transition-colors duration-300">linkedin.com/in/cnctsubroto</a></p>
+                                <p className="text-gray-300">GitHub: <a href="https://github.com/Subroto761" className="text-red-800 hover:text-red-700 transition-colors duration-300">github.com/Subroto761</a></p>
+                                <p className="text-gray-300">Resume: <a href="#" className="text-red-800 hover:text-red-700 transition-colors duration-300">Download Resume</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const Footer = () => (
+            <footer className="bg-gray-900 text-gray-300 py-6 animate__animated animate__fadeInUp">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <p>© 2025 Subroto Mondal. All rights reserved.</p>
+                </div>
+            </footer>
+        );
+
+        const App = () => {
+            React.useEffect(() => {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('animate__animated', 'animate__fadeInUp');
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                });
+
+                document.querySelectorAll('.animate__animated').forEach(element => {
+                    observer.observe(element);
+                });
+
+                return () => observer.disconnect();
+            }, []);
+
+            return (
+                <div>
+                    <Nav />
+                    <Hero />
+                    <About />
+                    <Experience />
+                    <Skills />
+                    <Projects />
+                    <Certifications />
+                    <Education />
+                    <Achievements />
+                    <Contact />
+                    <Footer />
+                </div>
+            );
+        };
+
+        try {
+            ReactDOM.render(<App />, document.getElementById('root'));
+        } catch (error) {
+            console.error('Error rendering React app:', error);
+            document.getElementById('root').innerHTML = '<h1>Error loading the portfolio. Please check the console for details.</h1>';
+        }
+    </script>
+</body>
+</html>
